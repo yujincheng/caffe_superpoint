@@ -24,7 +24,7 @@ int main(){
   int Height = 480;
   int Width = 640;
   float* tmpfloat = new float [1*1*Height*Width];
-  std::ifstream inpfile("/home/tsui/yujc/testcpptorch/pytorchtest/inp.qwe", std::ios::binary);
+  std::ifstream inpfile("../demo2/inp.qwe", std::ios::binary);
   inpfile.read((char*)tmpfloat, 1*1*Height*Width*sizeof(float));
   inpfile.close();
   
