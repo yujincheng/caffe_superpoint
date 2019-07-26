@@ -19,7 +19,7 @@ int main(){
   shared_ptr<Net<float> > net_;
   net_.reset(new Net<float>("../demo2/model2.prototxt", TEST));
   net_->CopyTrainedLayersFrom("../demo2/model2.caffemodel");
-  Caffe::set_mode(Caffe::GPU);
+  Caffe::set_mode(Caffe::CPU);
   LOG(INFO)  << "123412341234";
   int Height = 480;
   int Width = 640;
@@ -41,8 +41,8 @@ int main(){
 
 
   std::cout << std::endl;
-  for (int j = 0; j < dspts.size() ; j++ ){
-    std::cout <<  dspts[0][j] << " ";
+  for (int j = 0; j < 256 ; j++ ){
+    std::cout <<  dspts[195][j] << " ";
     if (j % 4 == 3){
       std::cout << std::endl;
     }

@@ -281,6 +281,22 @@ layer {
         dilation: 1
     }
 }
+
+layer {
+  name: "norm"
+  type: "Normalize"
+  bottom: "ConvNdBackward25"
+  top: "ConvNdBackward25"
+  norm_param {
+    across_spatial: False
+    scale_filler {
+      type: "constant"
+      value: 1
+    }
+    channel_shared: True
+  }
+}
+
 layer {
   name: "ConvNdBackward25Permute"
   type: "Permute"
@@ -292,6 +308,12 @@ layer {
     order: 3
     order: 1
   }
+}
+layer {
+  name: "Semi_Soft"
+  type: "Softmax"
+  bottom: "ConvNdBackward22"
+  top: "ConvNdBackward22"
 }
 layer {
   name: "ConvNdBackward22Permute"

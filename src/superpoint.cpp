@@ -1,7 +1,18 @@
 #include <superpoint.h>
 #include <stdlib.h>
+#include <chrono>
 using namespace std;
 // using namespace caffe;
+
+class point
+{
+    public:
+        int W;   
+        int H;  
+        float semi;   
+        point(int a, int b, float c) {H=a;W=b;semi=c;}
+        point() {}
+};
 
 class max_heap_t {
     public:
@@ -227,13 +238,16 @@ int ExactSP(caffe::shared_ptr< caffe::Net<float> > net_, const float* grey, std:
   caffe::Blob<float>* input_layer = net_->input_blobs()[0];
   float* input_data = input_layer->mutable_cpu_data();
 //   LOG(INFO) << Width << "  "<< Height;
+                            std::chrono::steady_clock::time_point timepoint[10];
+                            timepoint[0] =std::chrono::steady_clock::now();
   memcpy(input_data, grey, Width*Height*sizeof(float) );
+                            timepoint[1] =std::chrono::steady_clock::now();
   net_->Forward();
+                            timepoint[2] =std::chrono::steady_clock::now();
   std::vector< caffe::Blob<float>* > output_layers = net_->output_blobs();
 //   LOG(INFO) << output_layers.size();
   for(int i : {0,1,2,3}){
-    // LOG(INFO) << output_layers[0]->shape()[i] << "  " << output_layers[1]->shape()[i];
-    // LOG(INFO) << output_layers[1]->shape()[i];
+    LOG(INFO) << output_layers[0]->shape()[i] << "  " << output_layers[1]->shape()[i];
   }
     int num_semi = 1*Feature_Length*Height/Cell*Width/Cell;
     // float* result_semi = new float[num_semi];
@@ -241,27 +255,29 @@ int ExactSP(caffe::shared_ptr< caffe::Net<float> > net_, const float* grey, std:
     float* result_semi = output_layers[0]->mutable_cpu_data();
     float* result_desc = output_layers[1]->mutable_cpu_data();
 
-    for(int i=0; i<num_semi; i++) {
-		    result_semi[i] = exp(result_semi[i]); //e^x
-        // result_semi[i] = pow(2, result_semi[i]); //2^x
-        // result_semi[i] = pow(4, result_semi[i]); //4^x
-	  }
+    // for(int i=0; i<num_semi; i++) {
+	// 	    result_semi[i] = exp(result_semi[i]); //e^x
+    //     // result_semi[i] = pow(2, result_semi[i]); //2^x
+    //     // result_semi[i] = pow(4, result_semi[i]); //4^x
+	//   }
 
     float semi[Height][Width];
-    point coarse_semi[Height/Cell][Width/Cell];
-    float coarse_desc[Height/Cell][Width/Cell][D];
+    // point coarse_semi[Height/Cell][Width/Cell];
+    // float coarse_desc[Height/Cell][Width/Cell][D];
+                            timepoint[3] =std::chrono::steady_clock::now();
     
     // cout << "\nRun normalize ..." << endl;
     for(int i=0; i<Height/Cell; i++) {
         for(int j=0; j<Width/Cell; j++) {
             //semi softmax
-            float cell_sum = 0;
-            for(int k=0; k<Feature_Length; k++) {
-                cell_sum = cell_sum + result_semi[k+j*Feature_Length+i*Feature_Length*Width/Cell];
-            }
+            // float cell_sum = 0;
+            // for(int k=0; k<Feature_Length; k++) {
+            //     cell_sum = cell_sum + result_semi[k+j*Feature_Length+i*Feature_Length*Width/Cell];
+            // }
             for(int kh=0; kh<Cell; kh++) {
                 for(int kw=0; kw<Cell; kw++) {
-                    semi[kh+i*Cell][kw+j*Cell] = result_semi[kw+kh*Cell+j*Feature_Length+i*Feature_Length*Width/Cell]/cell_sum;
+                    // semi[kh+i*Cell][kw+j*Cell] = result_semi[kw+kh*Cell+j*Feature_Length+i*Feature_Length*Width/Cell]/cell_sum;
+                    semi[kh+i*Cell][kw+j*Cell] = result_semi[kw+kh*Cell+j*Feature_Length+i*Feature_Length*Width/Cell];
                     // LOG(INFO) << kh+i*Cell << " " << kw+j*Cell << " " << semi[kh+i*Cell][kw+j*Cell];
                 }
             }
@@ -280,19 +296,21 @@ int ExactSP(caffe::shared_ptr< caffe::Net<float> > net_, const float* grey, std:
             } */
             
             //desc normalize
-            float desc_sum_2 = 0;
-            for(int k=0; k<D; k++) {
-                desc_sum_2 = desc_sum_2 + pow(result_desc[k+j*D+i*D*Width/Cell],2);
-            }
-            float desc_sum = sqrt(desc_sum_2);
-            for(int k=0; k<D; k++) {
-                coarse_desc[i][j][k] = result_desc[k+j*D+i*D*Width/Cell]/desc_sum;
-                // coarse_desc[i][j][k] = (float)(int)(result_desc[k+j*D+i*D*Width/Cell]/desc_sum*512);
-                // coarse_desc[i][j][k] = coarse_desc[i][j][k]>127? 127:coarse_desc[i][j][k];
-                // coarse_desc[i][j][k] = coarse_desc[i][j][k]<-128? -128:coarse_desc[i][j][k];
-            }
+// float desc_sum_2 = 0;
+// for(int k=0; k<D; k++) {
+//     desc_sum_2 = desc_sum_2 + pow(result_desc[k+j*D+i*D*Width/Cell],2);
+// }
+// float desc_sum = sqrt(desc_sum_2);
+// for(int k=0; k<D; k++) {
+//     coarse_desc[i][j][k] = result_desc[k+j*D+i*D*Width/Cell]/desc_sum;
+//     // coarse_desc[i][j][k] = (float)(int)(result_desc[k+j*D+i*D*Width/Cell]/desc_sum*512);
+//     // coarse_desc[i][j][k] = coarse_desc[i][j][k]>127? 127:coarse_desc[i][j][k];
+//     // coarse_desc[i][j][k] = coarse_desc[i][j][k]<-128? -128:coarse_desc[i][j][k];
+// }
         }
     }
+                            timepoint[4] =std::chrono::steady_clock::now();
+
     std::vector<point> tmp_point;
     
     //NMS
@@ -314,19 +332,45 @@ int ExactSP(caffe::shared_ptr< caffe::Net<float> > net_, const float* grey, std:
             }
         }
     }
+    
+                            timepoint[5] =std::chrono::steady_clock::now();
     top_k(tmp_point,tmp_point.size(),KEEP_K_POINTS);
+                            timepoint[6] =std::chrono::steady_clock::now();
     // cv::Mat desc( int(tmp_point.size()), D, CV_32FC1);
     // std::vector<cv::KeyPoint> points;
     dspts.clear();
     kpts.clear();
+
+
+        // for (int j = 0; j < D ; j++ ){
+        // // std::cout <<  result_desc[0 + j] << " ";
+        // std::cout <<  output_layers[1]->data_at(0,0,0,j) << " ";
+        // if (j % 4 == 3){
+        // std::cout << std::endl;
+        // }
+        // }
+    // std::cout << int(tmp_point[0].W / Cell) << std::endl ;
+    // std::cout << int(tmp_point[0].H / Cell) << std::endl ;
+
     for(int i=0; i<tmp_point.size(); i++) {
         kpts.push_back(cv::KeyPoint(tmp_point[i].W, tmp_point[i].H, 0, 0));
         std::vector<float> DataDesc(D);   //第i+1行的所有元素  
+        // if(tmp_point[i].W == 149){
+        //     std::cout << i << " " << tmp_point[i].W << " " <<  tmp_point[i].H<< " "  <<  tmp_point[i].semi << std::endl;
+        // }
+        int x1 = int(tmp_point[i].W / Cell);
+        int x2 = int(tmp_point[i].H / Cell);
         for(int j = 0; j < D; j++){
-            DataDesc[j] = coarse_desc[tmp_point[i].H/Cell][tmp_point[i].W/Cell][j];
+            DataDesc[j] = result_desc[ x1*D + x2*(D*Width/Cell) +j];
         }
         dspts.push_back(DataDesc);
     }
+    
+    timepoint[5] =std::chrono::steady_clock::now();
+                            for (int i = 0; i < 7; i ++ ){
+                                    LOG(INFO) << " time step: " << i << " : " << std::chrono::duration<double,std::milli>(timepoint[i+1] - timepoint[i]).count() << std::endl;
+                                }
     return 0;
+                            
 
 }
