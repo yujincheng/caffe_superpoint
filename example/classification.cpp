@@ -19,7 +19,7 @@ int main(){
   shared_ptr<Net<float> > net_;
   net_.reset(new Net<float>("../demo2/model2.prototxt", TEST));
   net_->CopyTrainedLayersFrom("../demo2/model2.caffemodel");
-  Caffe::set_mode(Caffe::CPU);
+  Caffe::set_mode(Caffe::GPU);
   LOG(INFO)  << "123412341234";
   int Height = 480;
   int Width = 640;
